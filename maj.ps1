@@ -1,6 +1,5 @@
-﻿
-# Mettez le contenu de votre script ici
-Set-ExecutionPolicy Unrestricted -Force -Scope Process
+﻿Set-ExecutionPolicy Unrestricted -Force -Scope Process
+
 # Installer le module PSWindowsUpdate, si nécessaire
 if (!(Get-Module -ListAvailable -Name PSWindowsUpdate))
 {
@@ -9,24 +8,22 @@ if (!(Get-Module -ListAvailable -Name PSWindowsUpdate))
 }
 
 Write-Host 'Mise a jour logiciels...'
-# Vérification de la présence de Curl
-$curlInstalled = choco list --localonly -r | Where-Object { $_ -match 'curl' }
 
-if ($null -eq $curlInstalled)
+# Vérification de la présence de Curl
+if (!(choco list --localonly curl))
 {
 	Write-Host 'Curl n est pas installe. Installation en cours...'
-	choco install curl -y > C:\temp\curl.txt
+	choco install curl -y *> C:\temp\curl.txt
 	Write-Host 'Installation de Curl terminee.'
-	Add-Content -Path "C:\temp\logfile.txt" -Value "Installation de Curl terminée."
+	"Installation de Curl terminée." | Out-File -FilePath "C:\temp\logfile.txt" -Append
 }
 else
 {
 	Write-Host 'Curl est installe. Mise a jour en cours...'
-	choco upgrade curl -y > C:\temp\curl.txt
+	choco upgrade curl -y *> C:\temp\curl.txt
 	Write-Host 'Mise a jour de Curl terminee.'
-	Add-Content -Path "C:\temp\logfile.txt" -Value "Mise à jour de Curl terminée."
+	"Mise à jour de Curl terminée." | Out-File -FilePath "C:\temp\logfile.txt" -Append
 }
-
 
 Add-Type -AssemblyName System.Windows.Forms
 
@@ -49,11 +46,10 @@ $chkWindows.Size = New-Object System.Drawing.Size(250, 20)
 $chkWindows.Text = 'Mettre à jour Windows'
 $form.Controls.Add($chkWindows)
 
-# Ajoutez des cases à cocher pour chaque type de mise à jour
 $chkWinget = New-Object System.Windows.Forms.CheckBox
 $chkWinget.Location = New-Object System.Drawing.Point(10, 70)
 $chkWinget.Size = New-Object System.Drawing.Size(250, 20)
-$chkWinget.Text = 'Mettre à jour les Winget'
+$chkWinget.Text = 'Mettre à jour les logiciels via Winget'
 $form.Controls.Add($chkWinget)
 
 # Ajoutez un bouton pour démarrer la mise à jour
@@ -66,22 +62,21 @@ $btnUpdate.Add_Click({
 		{
 			Write-Host "Mise à jour des logiciels Chocolatey..."
 			Write-Progress -Activity 'Mise a jour logiciels...' -Status 'En cours...' -PercentComplete 0
-			choco upgrade all -y > C:\temp\cocolateyup.txt
+			choco upgrade all -y *> C:\temp\cocolateyup.txt
 			Write-Progress -Activity 'Mise a jour logiciels...' -Status 'Termine.' -PercentComplete 100
-			Add-Content -Path "C:\temp\logfile.txt" -Value "Mise à jour de tous les logiciels avec Chocolatey terminée."
+			"Mise à jour de tous les logiciels avec Chocolatey terminée." | Out-File -FilePath "C:\temp\logfile.txt" -Append
 		}
 		if ($chkWindows.Checked)
 		{
 			Write-Host "Mise à jour de Windows..."
-			
 			Get-WindowsUpdate -Install -AcceptAll -AutoReboot
-			Add-Content -Path "C:\temp\logfile.txt" -Value "Windows Update ok"
+			"Windows Update ok" | Out-File -FilePath "C:\temp\logfile.txt" -Append
 		}
-		if ($chkWinget.Checked) # Corrigé ici
+		if ($chkWinget.Checked)
 		{
 			Write-Host "Mise à jour avec Winget..."
-			winget upgrade --all # Alternative à Start-Process
-			Add-Content -Path "C:\temp\logfile.txt" -Value "Mise à jour de tous les logiciels avec winget terminée."
+			winget upgrade --all *> C:\temp\wingetup.txt
+			"Mise à jour de tous les logiciels avec winget terminée." | Out-File -FilePath "C:\temp\logfile.txt" -Append
 		}
 		$form.Close()
 	})
